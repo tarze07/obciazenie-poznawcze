@@ -161,6 +161,9 @@ th{font-weight:500;color:var(--muted)}
           <span><i style="background:var(--agent)"></i>Zarządzanie agentami</span>
           <span><i style="background:var(--ctx)"></i>Szerokość kontekstu</span>
         </div>
+        <h2 style="margin-top:18px">Stosunek R w funkcji α</h2>
+        <div class="chartwrap"><svg id="chart" viewBox="0 0 560 190" width="100%" role="img" aria-label="Wykres stosunku obciążeń R w zależności od alfa"></svg></div>
+        <p class="note" id="threshold"></p>
       </section>
 
       <section class="panel" aria-live="polite">
@@ -178,12 +181,6 @@ th{font-weight:500;color:var(--muted)}
   </div>
 
   <div class="stack below">
-    <section class="panel">
-      <h2>Stosunek R w funkcji α</h2>
-      <div class="chartwrap"><svg id="chart" viewBox="0 0 560 260" width="100%" role="img" aria-label="Wykres stosunku obciążeń R w zależności od alfa"></svg></div>
-      <p class="note" id="threshold"></p>
-    </section>
-
     <section class="panel">
       <h2>Rozbicie na składniki</h2>
       <div class="tablewrap"><table id="tbl"></table></div>
@@ -419,7 +416,7 @@ function render(){
 }
 
 function drawChart(p,Lold){
-  const W=560,H=260,m={l:44,r:14,t:14,b:36};
+  const W=560,H=190,m={l:44,r:14,t:14,b:36};
   const iw=W-m.l-m.r, ih=H-m.t-m.b;
   const pts=[]; for(let i=0;i<=100;i++){const a=i/100; pts.push([a,loads(p,a).Lnew/Lold]);}
   const ymax=Math.max(1.2,Math.ceil(Math.max(...pts.map(q=>q[1]))*5)/5);
@@ -432,7 +429,7 @@ function drawChart(p,Lold){
   s+=`<text x="${m.l+iw/2}" y="${H-4}" text-anchor="middle">α</text>`;
   // break-even
   s+=`<line x1="${m.l}" x2="${W-m.r}" y1="${y(1)}" y2="${y(1)}" stroke="${css("--ink")}" stroke-dasharray="5 4" stroke-width="1.2"/>`;
-  s+=`<text x="${W-m.r}" y="${y(1)-6}" text-anchor="end">R = 1, próg</text>`;
+  s+=`<text x="${m.l+6}" y="${y(1)-6}" text-anchor="start">R = 1, próg</text>`;
   // curve
   s+=`<polyline fill="none" stroke="${css("--new")}" stroke-width="2.5" points="${pts.map(q=>`${x(q[0]).toFixed(1)},${y(q[1]).toFixed(1)}`).join(" ")}"/>`;
   // current point
