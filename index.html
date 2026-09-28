@@ -64,6 +64,15 @@ legend{font:600 .95rem "IBM Plex Serif",Georgia,serif;color:var(--muted);margin-
 svg text{fill:var(--muted);font:12px "IBM Plex Sans",system-ui,sans-serif}
 .formula{font-size:.92rem;line-height:1.7;overflow-x:auto;white-space:nowrap;background:var(--bg);border-radius:6px;padding:10px 12px}
 .stack{display:grid;grid-template-columns:minmax(0,1fr);gap:22px}
+.below{margin-top:22px}
+@media (min-width:761px){
+  .grid>.panel,.results{position:sticky;top:12px;max-height:calc(100vh - 24px);overflow-y:auto;overscroll-behavior:contain}
+}
+.summary{display:none}
+@media (max-width:760px){
+  .summary{display:flex;flex-wrap:wrap;gap:4px 16px;position:sticky;top:0;z-index:5;margin:0 -18px 14px;padding:8px 18px;background:var(--surface);border-bottom:1px solid var(--line);font-size:.9rem;color:var(--muted);font-variant-numeric:tabular-nums}
+  .summary b{color:var(--ink);font-weight:600}
+}
 .note{color:var(--muted);font-size:.88rem;margin:10px 0 0}
 table{border-collapse:collapse;width:100%;font-size:.9rem;font-variant-numeric:tabular-nums}
 td,th{padding:5px 6px;border-bottom:1px solid var(--line);text-align:right}
@@ -101,6 +110,12 @@ th{font-weight:500;color:var(--muted)}
   </div>
 
   <div role="tabpanel" id="panel-sym" aria-labelledby="tab-sym">
+  <div class="summary" aria-hidden="true">
+    <span>R <b id="sumR"></b></span>
+    <span>R<sub>S</sub> <b id="sumRS"></b></span>
+    <span>L <b id="sumL"></b></span>
+    <span>S <b id="sumS"></b></span>
+  </div>
 
   <div class="grid">
     <section class="panel" aria-label="Parametry modelu">
@@ -131,7 +146,7 @@ th{font-weight:500;color:var(--muted)}
       </fieldset>
     </section>
 
-    <div class="stack">
+    <div class="stack results">
       <section class="panel" aria-live="polite">
         <div class="verdict"><span class="r" id="R"></span><span class="txt" id="verdictTxt"></span></div>
         <div class="bars">
@@ -159,19 +174,22 @@ th{font-weight:500;color:var(--muted)}
         <p class="note">S = (L / L<sub>max</sub> + ρ/n) / c, &nbsp; c = c<sub>0</sub>·(1 − λ·α) / (1 + η·(n − 1)). Przerywana linia to S = 1: powyżej wymagania przekraczają kontrolę (wysokie napięcie).</p>
       </section>
 
-      <section class="panel">
-        <h2>Stosunek R w funkcji α</h2>
-        <div class="chartwrap"><svg id="chart" viewBox="0 0 560 260" width="100%" role="img" aria-label="Wykres stosunku obciążeń R w zależności od alfa"></svg></div>
-        <p class="note" id="threshold"></p>
-      </section>
-
-      <section class="panel">
-        <h2>Rozbicie na składniki</h2>
-        <div class="tablewrap"><table id="tbl"></table></div>
-        <h2 style="margin-top:18px">Wzór z bieżącymi wartościami</h2>
-        <div class="formula" id="formula"></div>
-      </section>
     </div>
+  </div>
+
+  <div class="stack below">
+    <section class="panel">
+      <h2>Stosunek R w funkcji α</h2>
+      <div class="chartwrap"><svg id="chart" viewBox="0 0 560 260" width="100%" role="img" aria-label="Wykres stosunku obciążeń R w zależności od alfa"></svg></div>
+      <p class="note" id="threshold"></p>
+    </section>
+
+    <section class="panel">
+      <h2>Rozbicie na składniki</h2>
+      <div class="tablewrap"><table id="tbl"></table></div>
+      <h2 style="margin-top:18px">Wzór z bieżącymi wartościami</h2>
+      <div class="formula" id="formula"></div>
+    </section>
   </div>
   </div>
 
@@ -375,7 +393,11 @@ function render(){
     $("smark"+k).style.left=`${(1/smax*100).toFixed(2)}%`;
   });
   $("RS").innerHTML=`R<sub>S</sub> = ${fmt(RS)}`;
+  $("sumR").textContent=fmt(R); $("sumR").style.color=$("R").style.color;
+  $("sumL").textContent=`${fmt(r.Lold,1)} → ${fmt(r.Lnew,1)}`;
+  $("sumS").textContent=`${fmt(Sold)} → ${fmt(Snew)}`;
   $("RS").style.color = RS>1.02 ? css("--bad") : (RS<0.98 ? css("--good") : css("--ink"));
+  $("sumRS").textContent=fmt(RS); $("sumRS").style.color=$("RS").style.color;
   const spct=Math.abs(RS-1)*100;
   $("stressTxt").textContent = RS>1.02 ? `Stres w nowym modelu jest o ${fmt(spct,0)}% wyższy.`
     : RS<0.98 ? `Stres w nowym modelu jest o ${fmt(spct,0)}% niższy.`
