@@ -53,12 +53,13 @@ Orientacyjnie: 0–3 jeden asystent, 4–10 kilka agentów z kontekstem, 10–20
 Stres liczony jest według modelu wymagania–kontrola (Job Demand-Control) Karaska (1979), najlepiej potwierdzonego empirycznie modelu stresu w pracy. Napięcie to iloraz wymagań i kontroli:
 
 ```
-S = (L / L_max) / c
+S = (L / L_max + ρ/n) / c
 ```
 
 | Symbol | Znaczenie |
 |---|---|
 | L_max | pojemność poznawcza: obciążenie, przy którym wymagania są pełne (D = 1) |
+| ρ/n | odpowiedzialność za projekt: każdy odpowiada za 1/n, ρ to waga odpowiedzialności za całość; LLM-y jej nie przejmują |
 | c | kontrola (swoboda decyzji), liczona z parametrów modelu |
 
 Kontrola zależy od wielkości zespołu i udziału LLM-ów:
@@ -75,7 +76,7 @@ c = c₀ · (1 − λ·α) / (1 + η·(n − 1))
 
 Bez tego kontrola byłaby w obu wariantach równa i R_S = R. Postać tej zależności to założenie symulatora, nie wynik badań.
 
-Stosunek stresu: `R_S = S_nowy / S_stary = R · c_stary / c_nowy`. Próg S = 1 (wymagania równe kontroli) to umowna granica przyjęta w symulatorze; w badaniach wysokie napięcie wyznacza się zwykle względem mediany.
+Stosunek stresu: `R_S = S_nowy / S_stary = (D_nowy / D_stary) · (c_stary / c_nowy)`, gdzie `D = L / L_max + ρ/n`. Próg S = 1 (wymagania równe kontroli) to umowna granica przyjęta w symulatorze; w badaniach wysokie napięcie wyznacza się zwykle względem mediany.
 
 ## Ograniczenia
 
@@ -83,4 +84,5 @@ Stosunek stresu: `R_S = S_nowy / S_stary = R · c_stary / c_nowy`. Próg S = 1 (
 - Model nie rozróżnia rodzajów obciążenia (wykonawcze vs decyzyjne), a praca decyzyjna męczy szybciej.
 - Parametry są szacunkami, nie pomiarami: wynik pokazuje zależności, nie dokładne wartości.
 - Wpływ wielkości zespołu i LLM-ów na kontrolę (η, λ) to założenie, a nie wynik badań.
+- Odpowiedzialność ρ/n jest liniowa, dzielona równo i nie zależy od wielkości ani stawki projektu.
 - Stres rośnie liniowo z obciążeniem; model nie uwzględnia wsparcia społecznego ani zmęczenia narastającego w czasie.

@@ -127,6 +127,7 @@ th{font-weight:500;color:var(--muted)}
         <div class="ctrl"><label for="c0"><span>c<sub>0</sub>, kontrola bazowa</span> <output id="oc0"></output></label><input type="range" id="c0" min="0.1" max="1" step="0.05" value="0.8"><small>Swoboda decyzji osoby pracującej samodzielnie, bez LLM-ów: jak, kiedy i w jakiej kolejności pracować. 1 = pełna.</small></div>
         <div class="ctrl"><label for="eta">η, utrata kontroli na osobę w zespole <output id="oeta"></output></label><input type="range" id="eta" min="0" max="0.5" step="0.01" value="0.1"><small>Każda kolejna osoba, z którą trzeba uzgadniać decyzje, ogranicza swobodę.</small></div>
         <div class="ctrl"><label for="lam">λ, utrata kontroli przez LLM-y <output id="olam"></output></label><input type="range" id="lam" min="0" max="0.9" step="0.01" value="0.3"><small>Jak bardzo oddanie pracy LLM-om ogranicza swobodę: zależność od ich wyników i błędów.</small></div>
+        <div class="ctrl"><label for="rho">ρ, waga odpowiedzialności za projekt <output id="orho"></output></label><input type="range" id="rho" min="0" max="2" step="0.05" value="0.5"><small>O ile rosną wymagania, gdy jedna osoba odpowiada za cały projekt. Każdy odpowiada za 1/n; LLM-y nie przejmują odpowiedzialności.</small></div>
       </fieldset>
     </section>
 
@@ -155,7 +156,7 @@ th{font-weight:500;color:var(--muted)}
           <div class="barrow"><div class="name"><b id="slblNew"></b><span id="svalNew"></span></div><div class="strack"><div class="fill" id="sbarNew" style="background:var(--new)"></div><div class="mark" id="smarkNew"></div></div></div>
         </div>
         <p class="note" id="ctrlTxt"></p>
-        <p class="note">S = (L / L<sub>max</sub>) / c, &nbsp; c = c<sub>0</sub>·(1 − λ·α) / (1 + η·(n − 1)). Przerywana linia to S = 1: powyżej wymagania przekraczają kontrolę (wysokie napięcie).</p>
+        <p class="note">S = (L / L<sub>max</sub> + ρ/n) / c, &nbsp; c = c<sub>0</sub>·(1 − λ·α) / (1 + η·(n − 1)). Przerywana linia to S = 1: powyżej wymagania przekraczają kontrolę (wysokie napięcie).</p>
       </section>
 
       <section class="panel">
@@ -234,14 +235,18 @@ th{font-weight:500;color:var(--muted)}
         <h2>Czynnik stresu</h2>
         <p>Im większe obciążenie poznawcze, tym większy stres. Do opisania tej zależności użyto modelu <b>wymagania–kontrola</b> (Job Demand-Control) Roberta Karaska z 1979 roku. To najczęściej badany i najlepiej potwierdzony model stresu w pracy: w wielu badaniach podłużnych i metaanalizach wysokie wymagania przy niskiej kontroli wiązały się z większym ryzykiem wypalenia, depresji i chorób układu krążenia.</p>
         <p>Model mówi, że stres (napięcie, <em>job strain</em>) nie zależy od samych wymagań, tylko od ich stosunku do kontroli, jaką człowiek ma nad swoją pracą. W badaniach epidemiologicznych napięcie często liczy się jako iloraz wymagań i kontroli. Symulator stosuje tę samą postać:</p>
-        <div class="formula">S = D / c, &nbsp; gdzie &nbsp; D = L / L<sub>max</sub></div>
+        <div class="formula">S = D / c, &nbsp; gdzie &nbsp; D = L / L<sub>max</sub> + ρ / n</div>
         <div class="tablewrap"><table>
           <tr><th>Symbol</th><th>Znaczenie</th></tr>
-          <tr><td>D</td><td>Wymagania: obciążenie poznawcze L z modelu powyżej, odniesione do pojemności.</td></tr>
+          <tr><td>D</td><td>Wymagania: obciążenie poznawcze L z modelu powyżej, odniesione do pojemności, plus odpowiedzialność za projekt.</td></tr>
+          <tr><td>ρ / n</td><td>Odpowiedzialność: każda osoba odpowiada za 1/n projektu, a ρ mówi, o ile rosną wymagania, gdy odpowiada za całość (ρ = 0,5 to pół pełnych wymagań).</td></tr>
           <tr><td>L<sub>max</sub></td><td>Pojemność poznawcza: obciążenie, przy którym wymagania uznajemy za pełne (D = 1). Wspólna dla obu wariantów, bo chodzi o tego samego człowieka.</td></tr>
           <tr><td>c</td><td>Kontrola (swoboda decyzji): na ile osoba sama decyduje, jak, kiedy i w jakiej kolejności pracuje. Liczona z parametrów modelu, patrz niżej.</td></tr>
         </table></div>
         <p>Stres rośnie liniowo z obciążeniem, a kontrola działa jak bufor: ta sama praca przy dwa razy większej kontroli daje o połowę mniejsze napięcie.</p>
+        <h3>Odpowiedzialność za projekt</h3>
+        <p>Obciążenie L mierzy ilość pracy, ale nie to, ile zależy od danej osoby. W literaturze o stresie w pracy odpowiedzialność za wyniki traktuje się jako osobne wymaganie (np. w modelu wymagań i zasobów pracy, JD-R). Dlatego jest dodawana do wymagań D, a nie do L.</p>
+        <p>Odpowiedzialność rozkłada się tylko na ludzi. W zespole 8-osobowym każdy odpowiada za 1/8 projektu, w 2-osobowym za 1/2, niezależnie od tego, ile pracy wykonują LLM-y: za ich błędy też odpowiada człowiek. Przy ρ = 0,5 różnica to 0,5/2 − 0,5/8 ≈ 0,19 wymagań więcej na osobę w małym zespole.</p>
         <h3>Skąd bierze się kontrola</h3>
         <p>Gdyby kontrola była w obu wariantach taka sama, stres byłby tylko przeskalowanym obciążeniem i R<sub>S</sub> byłoby zawsze równe R. Dlatego kontrola zależy od tych samych czynników, które zmieniają się między wariantami:</p>
         <div class="formula">c = c<sub>0</sub> · (1 − λ·α) / (1 + η·(n − 1))</div>
@@ -252,8 +257,8 @@ th{font-weight:500;color:var(--muted)}
           <tr><td>λ</td><td>Utrata kontroli przez oddanie pracy LLM-om. Osoba zależy od wyników, których nie wytworzyła, i mniej korzysta z własnych umiejętności (u Karaska: <em>skill discretion</em>). Przy α = 0 ten czynnik znika.</td></tr>
         </table></div>
         <p>Stosunek stresu obu wariantów to:</p>
-        <div class="formula">R<sub>S</sub> = S<sub>nowy</sub> / S<sub>stary</sub> = R · c<sub>stary</sub> / c<sub>nowy</sub> = R · (1 + η·(n<sub>nowy</sub> − 1)) / ((1 − λ·α) · (1 + η·(n<sub>stary</sub> − 1)))</div>
-        <p>Mały zespół ma więc dwie przeciwne siły: mniej osób do uzgadniania daje więcej swobody, a większy udział LLM-ów ją odbiera. Dlatego może mieć większe obciążenie (R &gt; 1), a mimo to mniejszy stres, albo odwrotnie. c<sub>0</sub> i L<sub>max</sub> skracają się w R<sub>S</sub>, ale decydują o tym, czy S przekracza próg.</p>
+        <div class="formula">R<sub>S</sub> = S<sub>nowy</sub> / S<sub>stary</sub> = (D<sub>nowy</sub> / D<sub>stary</sub>) · (c<sub>stary</sub> / c<sub>nowy</sub>)</div>
+        <p>Mały zespół ma więc dwie przeciwne siły: mniej osób do uzgadniania daje więcej swobody, a większy udział LLM-ów ją odbiera. Do tego dochodzi większa odpowiedzialność, która zawsze podnosi stres w mniejszym zespole. Dlatego R<sub>S</sub> może być wyższe albo niższe od R. c<sub>0</sub> skraca się w R<sub>S</sub>, ale decyduje o tym, czy S przekracza próg.</p>
         <p>Postać tej zależności (dzielenie przez 1 + η·(n − 1) i mnożenie przez 1 − λ·α) to założenie symulatora. Model Karaska mówi, że kontrola chroni przed stresem, ale nie mówi, jak zależy od wielkości zespołu czy automatyzacji.</p>
         <p>Próg S = 1 (wymagania równe kontroli) to umowna granica przyjęta w symulatorze dla czytelności. W badaniach „wysokie napięcie” wyznacza się zwykle względem mediany w badanej grupie, a nie stałego progu.</p>
         <h3>Dlaczego nie inne modele</h3>
@@ -283,6 +288,7 @@ th{font-weight:500;color:var(--muted)}
           <li>Model nie rozróżnia rodzajów obciążenia (wykonawcze vs decyzyjne), a praca decyzyjna męczy szybciej.</li>
           <li>Parametry są szacunkami, nie pomiarami: wynik pokazuje zależności, nie dokładne wartości.</li>
           <li>Wpływ wielkości zespołu i LLM-ów na kontrolę (η, λ) to założenie, a nie wynik badań.</li>
+          <li>Odpowiedzialność ρ/n jest liniowa i nie zależy od wielkości ani stawki projektu; przyjmuje też, że odpowiedzialność dzieli się równo.</li>
           <li>Stres rośnie liniowo z obciążeniem; model nie uwzględnia wsparcia społecznego (rozszerzenie Johnsona i Halla) ani zmęczenia narastającego w czasie.</li>
         </ul>
       </section>
@@ -291,7 +297,7 @@ th{font-weight:500;color:var(--muted)}
 </main>
 <script>
 const $ = id => document.getElementById(id);
-const ids = ["C","nOld","nNew","a","b","dm","g","k","Lmax","c0","eta","lam"];
+const ids = ["C","nOld","nNew","a","b","dm","g","k","Lmax","c0","eta","lam","rho"];
 const fmt = (x,d=2) => Number(x).toLocaleString("pl-PL",{minimumFractionDigits:d,maximumFractionDigits:d});
 const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
 
@@ -310,7 +316,7 @@ function read(){
   $("oC").textContent=p.C; $("onOld").textContent=p.nOld; $("onNew").textContent=p.nNew;
   $("oa").textContent=fmt(p.a); $("ob").textContent=fmt(p.b); $("odm").textContent=fmt(p.dm,1);
   $("og").textContent=fmt(p.g,1); $("ok").textContent=fmt(p.k,1);
-  $("oLmax").textContent=p.Lmax; $("oc0").textContent=fmt(p.c0); $("oeta").textContent=fmt(p.eta); $("olam").textContent=fmt(p.lam);
+  $("oLmax").textContent=p.Lmax; $("oc0").textContent=fmt(p.c0); $("oeta").textContent=fmt(p.eta); $("olam").textContent=fmt(p.lam); $("orho").textContent=fmt(p.rho);
   return p;
 }
 
@@ -355,8 +361,11 @@ function render(){
 
   // stress: Karasek demand/control quotient
   const cOld=p.c0/(1+p.eta*(p.nOld-1)), cNew=p.c0*(1-p.lam*p.a)/(1+p.eta*(p.nNew-1));
-  const Sold=(r.Lold/p.Lmax)/cOld, Snew=(r.Lnew/p.Lmax)/cNew, RS=Snew/Sold;
-  $("ctrlTxt").textContent=`Kontrola: c = ${fmt(cOld)} w zespole ${p.nOld}-osobowym, c = ${fmt(cNew)} w nowym modelu.`;
+  const respOld=p.rho/p.nOld, respNew=p.rho/p.nNew;
+  const Dold=r.Lold/p.Lmax+respOld, Dnew=r.Lnew/p.Lmax+respNew;
+  const Sold=Dold/cOld, Snew=Dnew/cNew, RS=Snew/Sold;
+  $("ctrlTxt").innerHTML=`Wymagania: D = ${fmt(Dold)} w zespole ${p.nOld}-osobowym (w tym odpowiedzialność ${fmt(respOld)}), D = ${fmt(Dnew)} w nowym modelu (w tym odpowiedzialność ${fmt(respNew)}).<br>`+
+    `Kontrola: c = ${fmt(cOld)} w zespole ${p.nOld}-osobowym, c = ${fmt(cNew)} w nowym modelu.`;
   const smax=Math.max(1.5,Sold,Snew)*1.05;
   $("slblOld").textContent=`1 osoba z ${p.nOld}`;
   $("slblNew").textContent=`1 osoba z ${p.nNew} + LLM`;
@@ -382,8 +391,8 @@ function render(){
     `L<sub>${p.nNew}</sub> = (1 − α(1 − β))·C/${p.nNew} + γ·${p.nNew-1} + δm${p.k?` + κ·log₂(C/${p.nNew})`:""}`+
     ` = (1 − ${fmt(p.a)}·${fmt(1-p.b)})·${fmt(p.C/p.nNew,1)} + ${fmt(p.g*(p.nNew-1),1)} + ${fmt(p.dm,1)}${p.k?` + ${fmt(r.nw.ctx,1)}`:""} = ${fmt(r.Lnew,1)}<br>`+
     `R = ${fmt(r.Lnew,1)} / ${fmt(r.Lold,1)} = ${fmt(R)}<br>`+
-    `S<sub>${p.nOld}</sub> = (${fmt(r.Lold,1)} / ${p.Lmax}) / ${fmt(cOld)} = ${fmt(Sold)}, &nbsp; `+
-    `S<sub>${p.nNew}</sub> = (${fmt(r.Lnew,1)} / ${p.Lmax}) / ${fmt(cNew)} = ${fmt(Snew)}, &nbsp; `+
+    `S<sub>${p.nOld}</sub> = (${fmt(r.Lold,1)} / ${p.Lmax} + ${fmt(p.rho)}/${p.nOld}) / ${fmt(cOld)} = ${fmt(Sold)}, &nbsp; `+
+    `S<sub>${p.nNew}</sub> = (${fmt(r.Lnew,1)} / ${p.Lmax} + ${fmt(p.rho)}/${p.nNew}) / ${fmt(cNew)} = ${fmt(Snew)}, &nbsp; `+
     `R<sub>S</sub> = ${fmt(RS)}`;
 }
 
