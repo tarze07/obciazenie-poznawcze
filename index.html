@@ -36,7 +36,7 @@ h1{font:600 clamp(1.5rem,4vw,2.1rem)/1.2 "IBM Plex Serif",Georgia,serif;margin:0
 h2{font:600 1.15rem/1.3 "IBM Plex Serif",Georgia,serif;margin:0 0 12px}
 p.lead{color:var(--muted);margin:0 0 24px;max-width:68ch}
 .grid{display:grid;grid-template-columns:minmax(0,340px) minmax(0,1fr);gap:22px;align-items:start}
-@media (max-width:760px){.grid{grid-template-columns:1fr}}
+@media (max-width:760px){.grid{grid-template-columns:minmax(0,1fr)}}
 .panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:18px}
 .ctrl{margin-bottom:16px}
 .ctrl:last-child{margin-bottom:0}
@@ -45,7 +45,7 @@ p.lead{color:var(--muted);margin:0 0 24px;max-width:68ch}
 .ctrl small{display:block;color:var(--muted);font-size:.82rem;line-height:1.35;margin-top:2px}
 input[type=range]{width:100%;margin:8px 0 0;accent-color:var(--new)}
 input[type=range]:focus-visible{outline:2px solid var(--old);outline-offset:3px}
-fieldset{border:none;padding:0;margin:0 0 18px}
+fieldset{border:none;padding:0;margin:0 0 18px;min-width:0}
 fieldset:last-child{margin-bottom:0}
 legend{font:600 .95rem "IBM Plex Serif",Georgia,serif;color:var(--muted);margin-bottom:10px;padding:0}
 .verdict{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 14px;margin-bottom:18px}
@@ -63,19 +63,40 @@ legend{font:600 .95rem "IBM Plex Serif",Georgia,serif;color:var(--muted);margin-
 .chartwrap{overflow-x:auto;margin-top:6px}
 svg text{fill:var(--muted);font:12px "IBM Plex Sans",system-ui,sans-serif}
 .formula{font-size:.92rem;line-height:1.7;overflow-x:auto;white-space:nowrap;background:var(--bg);border-radius:6px;padding:10px 12px}
-.stack{display:grid;gap:22px}
+.stack{display:grid;grid-template-columns:minmax(0,1fr);gap:22px}
 .note{color:var(--muted);font-size:.88rem;margin:10px 0 0}
 table{border-collapse:collapse;width:100%;font-size:.9rem;font-variant-numeric:tabular-nums}
 td,th{padding:5px 6px;border-bottom:1px solid var(--line);text-align:right}
 td:first-child,th:first-child{text-align:left}
 th{font-weight:500;color:var(--muted)}
 .tablewrap{overflow-x:auto}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin:0 0 22px;overflow-x:auto}
+.tabs button{appearance:none;background:none;border:none;border-bottom:2px solid transparent;margin-bottom:-1px;padding:10px 14px;font:500 .98rem "IBM Plex Sans",system-ui,sans-serif;color:var(--muted);cursor:pointer;white-space:nowrap}
+.tabs button:hover{color:var(--ink)}
+.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--new)}
+.tabs button:focus-visible{outline:2px solid var(--old);outline-offset:-2px;border-radius:4px}
+[role=tabpanel][hidden]{display:none}
+.doc{max-width:76ch}
+.doc .panel{margin-bottom:22px}
+.doc p,.doc li{margin:0 0 10px}
+.doc ul{padding-left:1.2em;margin:0 0 10px}
+.doc h3{font:600 1rem/1.3 "IBM Plex Serif",Georgia,serif;margin:16px 0 8px}
+.doc .formula{margin:6px 0 12px}
+.doc table td,.doc table th{text-align:left;vertical-align:top}
+.doc table td:first-child{white-space:nowrap;font-weight:500}
 </style>
 </head>
 <body>
 <main>
   <h1>Obciążenie poznawcze: 8 osób czy 2 osoby z LLM-ami?</h1>
   <p class="lead">Model porównuje obciążenie jednej osoby w zespole pierwotnym z obciążeniem jednej z dwóch osób pracujących z modelami językowymi. Przesuwaj parametry i obserwuj, gdzie leży próg opłacalności.</p>
+
+  <div class="tabs" role="tablist" aria-label="Widoki">
+    <button role="tab" id="tab-sym" aria-controls="panel-sym" aria-selected="true">Symulator</button>
+    <button role="tab" id="tab-opis" aria-controls="panel-opis" aria-selected="false" tabindex="-1">Opis modelu</button>
+  </div>
+
+  <div role="tabpanel" id="panel-sym" aria-labelledby="tab-sym">
 
   <div class="grid">
     <section class="panel" aria-label="Parametry modelu">
@@ -126,6 +147,86 @@ th{font-weight:500;color:var(--muted)}
         <div class="tablewrap"><table id="tbl"></table></div>
         <h2 style="margin-top:18px">Wzór z bieżącymi wartościami</h2>
         <div class="formula" id="formula"></div>
+      </section>
+    </div>
+  </div>
+  </div>
+
+  <div role="tabpanel" id="panel-opis" aria-labelledby="tab-opis" hidden>
+    <div class="doc">
+      <section class="panel">
+        <h2>O co chodzi</h2>
+        <p>Model odpowiada na pytanie: czy jedna osoba w małym zespole wspieranym przez LLM-y jest bardziej, czy mniej obciążona poznawczo niż jedna osoba w tradycyjnym, większym zespole, który realizuje ten sam projekt?</p>
+        <p>Porównujemy obciążenie <em>jednej osoby</em>, a nie całego zespołu. Mniejszy zespół oznacza, że każdy bierze na siebie większy wycinek projektu, ale za to mniej czasu traci na koordynację. LLM-y mogą przejąć część pracy wykonawczej, jednak ich wyniki trzeba sprawdzać, a samymi agentami trzeba zarządzać.</p>
+      </section>
+
+      <section class="panel">
+        <h2>Wzór</h2>
+        <p>Obciążenie jednej osoby w zespole liczącym n osób:</p>
+        <div class="formula">L = (1 − α + α·β) · C/n + γ·(n − 1) + δ·m + κ·log₂(C/n)</div>
+        <p>W zespole pierwotnym nikt nie korzysta z LLM-ów, więc α = 0 i δ·m = 0. Wzór upraszcza się wtedy do:</p>
+        <div class="formula">L<sub>stary</sub> = C/n<sub>stary</sub> + γ·(n<sub>stary</sub> − 1) + κ·log₂(C/n<sub>stary</sub>)</div>
+        <p>Wynik porównania to stosunek obciążeń:</p>
+        <div class="formula">R = L<sub>nowy</sub> / L<sub>stary</sub></div>
+        <p>R &gt; 1 oznacza, że każda osoba w nowym modelu jest bardziej obciążona, R &lt; 1, że mniej.</p>
+      </section>
+
+      <section class="panel">
+        <h2>Parametry</h2>
+        <div class="tablewrap"><table>
+          <tr><th>Symbol</th><th>Znaczenie</th></tr>
+          <tr><td>C</td><td>Całkowita złożoność projektu: łączna liczba decyzji, zadań i informacji. Jednostka umowna; w tych samych jednostkach wyrażone są pozostałe koszty.</td></tr>
+          <tr><td>n</td><td>Liczba osób w zespole (pierwotnym lub nowym).</td></tr>
+          <tr><td>α</td><td>Część pracy wykonawczej przejęta przez LLM-y, od 0 (nic) do 1 (całość).</td></tr>
+          <tr><td>β</td><td>Koszt weryfikacji wyniku LLM w stosunku do zrobienia tego samemu. 0 = sprawdzenie nic nie kosztuje, 1 = tyle samo co własna praca.</td></tr>
+          <tr><td>γ</td><td>Koszt koordynacji z jedną inną osobą: spotkania, uzgodnienia, przekazywanie wiedzy.</td></tr>
+          <tr><td>δ·m</td><td>Koszt sterowania agentami: pisanie promptów, dostarczanie kontekstu, dzielenie zadań, restarty. Weryfikacja wyników jest liczona osobno w β.</td></tr>
+          <tr><td>κ</td><td>Koszt szerokości kontekstu: im większy wycinek projektu trzeba ogarnąć, tym trudniej. Rośnie logarytmicznie z C/n.</td></tr>
+        </table></div>
+      </section>
+
+      <section class="panel">
+        <h2>Składniki obciążenia</h2>
+        <h3>Praca własna: (1 − α)·C/n</h3>
+        <p>Część przypadającego na osobę wycinka projektu, którą nadal wykonuje człowiek.</p>
+        <h3>Weryfikacja LLM: α·β·C/n</h3>
+        <p>Praca oddana LLM-om nie znika całkowicie: trzeba ją przeczytać, sprawdzić i poprawić. Przy β = 0,3 sprawdzenie kosztuje 30% tego, co zrobienie samemu.</p>
+        <h3>Koordynacja z ludźmi: γ·(n − 1)</h3>
+        <p>Każda osoba musi się komunikować z pozostałymi n − 1 osobami. To główna przewaga małego zespołu.</p>
+        <h3>Zarządzanie agentami: δ·m</h3>
+        <p>Stały narzut na pracę z LLM-ami, niezależny od tego, ile pracy przejmują.</p>
+        <h3>Szerokość kontekstu: κ·log₂(C/n)</h3>
+        <p>W małym zespole każdy musi trzymać w głowie większą część projektu. Człon jest logarytmiczny, bo koszt ogarnięcia kolejnych elementów rośnie wolniej niż ich liczba.</p>
+      </section>
+
+      <section class="panel">
+        <h2>Próg opłacalności</h2>
+        <p>Próg α* to najmniejsza część pracy, jaką muszą przejąć LLM-y, żeby obciążenie nie wzrosło (R = 1):</p>
+        <div class="formula">α* = (C/n<sub>nowy</sub> + γ·(n<sub>nowy</sub> − 1) + δ·m + κ·log₂(C/n<sub>nowy</sub>) − L<sub>stary</sub>) / ((C/n<sub>nowy</sub>)·(1 − β))</div>
+        <p>Przy pominięciu kosztów stałych (γ, δ·m, κ) i przejściu z 8 na 2 osoby warunek sprowadza się do:</p>
+        <div class="formula">α·(1 − β) ≥ 0,75</div>
+        <p>Czyli LLM-y muszą „netto” przejąć trzy czwarte pracy. Przy β = 0,3 oznacza to α ≥ 1,07, co jest nieosiągalne. Dopiero oszczędność na koordynacji (γ) może przesunąć próg w zasięg.</p>
+      </section>
+
+      <section class="panel">
+        <h2>Kalibracja δ·m</h2>
+        <p>δ·m jest wyrażone w tych samych jednostkach co C. Najprościej oszacować je przez udział czasu: jeśli osoba o łącznym obciążeniu L ≈ 30 spędza ok. 20% czasu na sterowaniu agentami, to δ·m ≈ 6.</p>
+        <p>Orientacyjne wartości:</p>
+        <ul>
+          <li><b>0–3</b>: jeden asystent,</li>
+          <li><b>4–10</b>: kilka agentów z kontekstem,</li>
+          <li><b>10–20</b>: orkiestracja wielu agentów,</li>
+          <li><b>20–30</b>: intensywna praca „dyspozytorska”.</li>
+        </ul>
+      </section>
+
+      <section class="panel">
+        <h2>Ograniczenia</h2>
+        <ul>
+          <li>δ·m jest stałą niezależną od C; w praktyce rośnie z wielkością projektu.</li>
+          <li>Model nie rozróżnia rodzajów obciążenia (wykonawcze vs decyzyjne), a praca decyzyjna męczy szybciej.</li>
+          <li>Parametry są szacunkami, nie pomiarami: wynik pokazuje zależności, nie dokładne wartości.</li>
+        </ul>
       </section>
     </div>
   </div>
@@ -227,6 +328,23 @@ function drawChart(p,Lold){
   s+=`<circle cx="${x(p.a)}" cy="${y(Rc)}" r="6" fill="${css("--surface")}" stroke="${css("--new")}" stroke-width="2.5"/>`;
   $("chart").innerHTML=s;
 }
+
+const tabs=[...document.querySelectorAll('[role=tab]')];
+function selectTab(t,focus){
+  tabs.forEach(b=>{const on=b===t; b.setAttribute("aria-selected",on); b.tabIndex=on?0:-1; $(b.getAttribute("aria-controls")).hidden=!on;});
+  if(focus) t.focus();
+  history.replaceState(null,"",t.id==="tab-opis"?"#opis":location.pathname+location.search);
+}
+tabs.forEach((b,i)=>{
+  b.addEventListener("click",()=>selectTab(b));
+  b.addEventListener("keydown",e=>{
+    const d={ArrowRight:1,ArrowLeft:-1}[e.key];
+    if(d){e.preventDefault(); selectTab(tabs[(i+d+tabs.length)%tabs.length],true);}
+    else if(e.key==="Home"){e.preventDefault(); selectTab(tabs[0],true);}
+    else if(e.key==="End"){e.preventDefault(); selectTab(tabs[tabs.length-1],true);}
+  });
+});
+if(location.hash==="#opis") selectTab($("tab-opis"));
 
 ids.forEach(i=>$(i).addEventListener("input",render));
 window.matchMedia("(prefers-color-scheme: dark)").addEventListener?.("change",render);
