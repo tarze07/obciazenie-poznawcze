@@ -59,7 +59,21 @@ S = (L / L_max) / c
 | Symbol | Znaczenie |
 |---|---|
 | L_max | pojemność poznawcza: obciążenie, przy którym wymagania są pełne (D = 1) |
-| c | kontrola (swoboda decyzji), 0,1–1, osobno dla zespołu pierwotnego i nowego modelu |
+| c | kontrola (swoboda decyzji), liczona z parametrów modelu |
+
+Kontrola zależy od wielkości zespołu i udziału LLM-ów:
+
+```
+c = c₀ · (1 − λ·α) / (1 + η·(n − 1))
+```
+
+| Symbol | Znaczenie |
+|---|---|
+| c₀ | kontrola bazowa osoby pracującej samodzielnie, bez LLM-ów |
+| η | utrata kontroli na każdą kolejną osobę w zespole (uzgadnianie decyzji) |
+| λ | utrata kontroli przez oddanie pracy LLM-om (zależność od ich wyników) |
+
+Bez tego kontrola byłaby w obu wariantach równa i R_S = R. Postać tej zależności to założenie symulatora, nie wynik badań.
 
 Stosunek stresu: `R_S = S_nowy / S_stary = R · c_stary / c_nowy`. Próg S = 1 (wymagania równe kontroli) to umowna granica przyjęta w symulatorze; w badaniach wysokie napięcie wyznacza się zwykle względem mediany.
 
@@ -68,4 +82,5 @@ Stosunek stresu: `R_S = S_nowy / S_stary = R · c_stary / c_nowy`. Próg S = 1 (
 - δ·m jest stałą niezależną od C; w praktyce rośnie z wielkością projektu.
 - Model nie rozróżnia rodzajów obciążenia (wykonawcze vs decyzyjne), a praca decyzyjna męczy szybciej.
 - Parametry są szacunkami, nie pomiarami: wynik pokazuje zależności, nie dokładne wartości.
+- Wpływ wielkości zespołu i LLM-ów na kontrolę (η, λ) to założenie, a nie wynik badań.
 - Stres rośnie liniowo z obciążeniem; model nie uwzględnia wsparcia społecznego ani zmęczenia narastającego w czasie.
