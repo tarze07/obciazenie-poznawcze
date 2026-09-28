@@ -70,6 +70,10 @@ td,th{padding:5px 6px;border-bottom:1px solid var(--line);text-align:right}
 td:first-child,th:first-child{text-align:left}
 th{font-weight:500;color:var(--muted)}
 .tablewrap{overflow-x:auto}
+.strack{position:relative;height:22px;border-radius:5px;background:var(--bg)}
+.strack .fill{height:100%;border-radius:5px;transition:width .25s ease}
+.strack .mark{position:absolute;top:-4px;bottom:-4px;border-left:2px dashed var(--ink)}
+@media (prefers-reduced-motion:reduce){.strack .fill{transition:none}}
 .tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin:0 0 22px}
 .tabs button{appearance:none;background:none;border:none;border-bottom:2px solid transparent;margin-bottom:-1px;padding:10px 14px;font:500 .98rem "IBM Plex Sans",system-ui,sans-serif;color:var(--muted);cursor:pointer;white-space:nowrap}
 .tabs button:hover{color:var(--ink)}
@@ -117,6 +121,12 @@ th{font-weight:500;color:var(--muted)}
         <div class="ctrl"><label for="g">γ, koordynacja z jedną osobą <output id="og"></output></label><input type="range" id="g" min="0" max="10" step="0.5" value="2"></div>
         <div class="ctrl"><label for="k">κ, koszt szerokości kontekstu <output id="ok"></output></label><input type="range" id="k" min="0" max="10" step="0.5" value="0"><small>Człon κ·log₂(C/n). Ile kosztuje ogarnięcie większego wycinka projektu.</small></div>
       </fieldset>
+      <fieldset>
+        <legend>Stres (model Karaska)</legend>
+        <div class="ctrl"><label for="Lmax"><span>L<sub>max</sub>, pojemność poznawcza</span> <output id="oLmax"></output></label><input type="range" id="Lmax" min="10" max="150" step="1" value="60"><small>Obciążenie, przy którym wymagania są pełne (D = 1).</small></div>
+        <div class="ctrl"><label for="cOld">Kontrola w zespole pierwotnym <output id="ocOld"></output></label><input type="range" id="cOld" min="0.1" max="1" step="0.05" value="0.5"><small>Swoboda decyzji: jak, kiedy i w jakiej kolejności pracować. 1 = pełna.</small></div>
+        <div class="ctrl"><label for="cNew">Kontrola w nowym modelu <output id="ocNew"></output></label><input type="range" id="cNew" min="0.1" max="1" step="0.05" value="0.5"></div>
+      </fieldset>
     </section>
 
     <div class="stack">
@@ -134,6 +144,16 @@ th{font-weight:500;color:var(--muted)}
           <span><i style="background:var(--agent)"></i>Zarządzanie agentami</span>
           <span><i style="background:var(--ctx)"></i>Szerokość kontekstu</span>
         </div>
+      </section>
+
+      <section class="panel" aria-live="polite">
+        <h2>Stres</h2>
+        <div class="verdict"><span class="r" id="RS"></span><span class="txt" id="stressTxt"></span></div>
+        <div class="bars">
+          <div class="barrow"><div class="name"><b id="slblOld"></b><span id="svalOld"></span></div><div class="strack"><div class="fill" id="sbarOld" style="background:var(--old)"></div><div class="mark" id="smarkOld"></div></div></div>
+          <div class="barrow"><div class="name"><b id="slblNew"></b><span id="svalNew"></span></div><div class="strack"><div class="fill" id="sbarNew" style="background:var(--new)"></div><div class="mark" id="smarkNew"></div></div></div>
+        </div>
+        <p class="note">S = (L / L<sub>max</sub>) / kontrola. Przerywana linia to S = 1: powyżej wymagania przekraczają kontrolę (wysokie napięcie).</p>
       </section>
 
       <section class="panel">
@@ -209,6 +229,29 @@ th{font-weight:500;color:var(--muted)}
       </section>
 
       <section class="panel">
+        <h2>Czynnik stresu</h2>
+        <p>Im większe obciążenie poznawcze, tym większy stres. Do opisania tej zależności użyto modelu <b>wymagania–kontrola</b> (Job Demand-Control) Roberta Karaska z 1979 roku. To najczęściej badany i najlepiej potwierdzony model stresu w pracy: w wielu badaniach podłużnych i metaanalizach wysokie wymagania przy niskiej kontroli wiązały się z większym ryzykiem wypalenia, depresji i chorób układu krążenia.</p>
+        <p>Model mówi, że stres (napięcie, <em>job strain</em>) nie zależy od samych wymagań, tylko od ich stosunku do kontroli, jaką człowiek ma nad swoją pracą. W badaniach epidemiologicznych napięcie często liczy się jako iloraz wymagań i kontroli. Symulator stosuje tę samą postać:</p>
+        <div class="formula">S = D / c, &nbsp; gdzie &nbsp; D = L / L<sub>max</sub></div>
+        <div class="tablewrap"><table>
+          <tr><th>Symbol</th><th>Znaczenie</th></tr>
+          <tr><td>D</td><td>Wymagania: obciążenie poznawcze L z modelu powyżej, odniesione do pojemności.</td></tr>
+          <tr><td>L<sub>max</sub></td><td>Pojemność poznawcza: obciążenie, przy którym wymagania uznajemy za pełne (D = 1). Wspólna dla obu wariantów, bo chodzi o tego samego człowieka.</td></tr>
+          <tr><td>c</td><td>Kontrola (swoboda decyzji), od 0,1 do 1: na ile osoba sama decyduje, jak, kiedy i w jakiej kolejności pracuje. Ustawiana osobno dla zespołu pierwotnego i nowego modelu.</td></tr>
+        </table></div>
+        <p>Stres rośnie liniowo z obciążeniem, a kontrola działa jak bufor: ta sama praca przy dwa razy większej kontroli daje o połowę mniejsze napięcie. Stosunek stresu obu wariantów to:</p>
+        <div class="formula">R<sub>S</sub> = S<sub>nowy</sub> / S<sub>stary</sub> = R · c<sub>stary</sub> / c<sub>nowy</sub></div>
+        <p>Dlatego mały zespół może mieć większe obciążenie (R &gt; 1), a mimo to mniejszy stres, jeśli każdy ma w nim więcej swobody. Działa to też w drugą stronę: praca pod dyktando agentów i ich błędów może obniżać kontrolę.</p>
+        <p>Próg S = 1 (wymagania równe kontroli) to umowna granica przyjęta w symulatorze dla czytelności. W badaniach „wysokie napięcie” wyznacza się zwykle względem mediany w badanej grupie, a nie stałego progu.</p>
+        <h3>Dlaczego nie inne modele</h3>
+        <ul>
+          <li><b>Prawo Yerkesa-Dodsona</b> (odwrócone U) opisuje wydajność, a nie stres, i jego empiryczne podstawy są słabe.</li>
+          <li><b>Model niewspółmierności wysiłku i nagrody</b> (Siegrista) jest dobrze potwierdzony, ale wymaga danych o nagrodach (płaca, uznanie, stabilność), których ten model nie zawiera.</li>
+          <li><b>Model wymagań i zasobów pracy</b> (JD-R) jest uogólnieniem modelu Karaska bez jednej, ustalonej postaci ilościowej.</li>
+        </ul>
+      </section>
+
+      <section class="panel">
         <h2>Kalibracja δ·m</h2>
         <p>δ·m jest wyrażone w tych samych jednostkach co C. Najprościej oszacować je przez udział czasu: jeśli osoba o łącznym obciążeniu L ≈ 30 spędza ok. 20% czasu na sterowaniu agentami, to δ·m ≈ 6.</p>
         <p>Orientacyjne wartości:</p>
@@ -226,6 +269,7 @@ th{font-weight:500;color:var(--muted)}
           <li>δ·m jest stałą niezależną od C; w praktyce rośnie z wielkością projektu.</li>
           <li>Model nie rozróżnia rodzajów obciążenia (wykonawcze vs decyzyjne), a praca decyzyjna męczy szybciej.</li>
           <li>Parametry są szacunkami, nie pomiarami: wynik pokazuje zależności, nie dokładne wartości.</li>
+          <li>Stres rośnie liniowo z obciążeniem; model nie uwzględnia wsparcia społecznego (rozszerzenie Johnsona i Halla) ani zmęczenia narastającego w czasie.</li>
         </ul>
       </section>
     </div>
@@ -233,7 +277,7 @@ th{font-weight:500;color:var(--muted)}
 </main>
 <script>
 const $ = id => document.getElementById(id);
-const ids = ["C","nOld","nNew","a","b","dm","g","k"];
+const ids = ["C","nOld","nNew","a","b","dm","g","k","Lmax","cOld","cNew"];
 const fmt = (x,d=2) => Number(x).toLocaleString("pl-PL",{minimumFractionDigits:d,maximumFractionDigits:d});
 const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
 
@@ -252,6 +296,7 @@ function read(){
   $("oC").textContent=p.C; $("onOld").textContent=p.nOld; $("onNew").textContent=p.nNew;
   $("oa").textContent=fmt(p.a); $("ob").textContent=fmt(p.b); $("odm").textContent=fmt(p.dm,1);
   $("og").textContent=fmt(p.g,1); $("ok").textContent=fmt(p.k,1);
+  $("oLmax").textContent=p.Lmax; $("ocOld").textContent=fmt(p.cOld); $("ocNew").textContent=fmt(p.cNew);
   return p;
 }
 
@@ -294,6 +339,23 @@ function render(){
 
   drawChart(p,r.Lold);
 
+  // stress: Karasek demand/control quotient
+  const Sold=(r.Lold/p.Lmax)/p.cOld, Snew=(r.Lnew/p.Lmax)/p.cNew, RS=Snew/Sold;
+  const smax=Math.max(1.5,Sold,Snew)*1.05;
+  $("slblOld").textContent=`1 osoba z ${p.nOld}`;
+  $("slblNew").textContent=`1 osoba z ${p.nNew} + LLM`;
+  [["Old",Sold],["New",Snew]].forEach(([k,S])=>{
+    $("sval"+k).textContent=`S = ${fmt(S)}${S>1?" · wysokie napięcie":""}`;
+    $("sbar"+k).style.width=`${(S/smax*100).toFixed(2)}%`;
+    $("smark"+k).style.left=`${(1/smax*100).toFixed(2)}%`;
+  });
+  $("RS").innerHTML=`R<sub>S</sub> = ${fmt(RS)}`;
+  $("RS").style.color = RS>1.02 ? css("--bad") : (RS<0.98 ? css("--good") : css("--ink"));
+  const spct=Math.abs(RS-1)*100;
+  $("stressTxt").textContent = RS>1.02 ? `Stres w nowym modelu jest o ${fmt(spct,0)}% wyższy.`
+    : RS<0.98 ? `Stres w nowym modelu jest o ${fmt(spct,0)}% niższy.`
+    : `Stres jest praktycznie taki sam.`;
+
   const rows=[["Praca własna","exec"],["Weryfikacja LLM","verif"],["Koordynacja z ludźmi","koord"],["Zarządzanie agentami","agent"],["Szerokość kontekstu","ctx"]];
   $("tbl").innerHTML=`<tr><th>Składnik</th><th>1 z ${p.nOld}</th><th>1 z ${p.nNew} + LLM</th><th>Różnica</th></tr>`+
     rows.map(([n,k])=>`<tr><td>${n}</td><td>${fmt(r.old[k],1)}</td><td>${fmt(r.nw[k],1)}</td><td>${(r.nw[k]-r.old[k]>=0?"+":"")}${fmt(r.nw[k]-r.old[k],1)}</td></tr>`).join("")+
@@ -303,7 +365,10 @@ function render(){
     `L<sub>${p.nOld}</sub> = C/${p.nOld} + γ·${p.nOld-1}${p.k?` + κ·log₂(C/${p.nOld})`:""} = ${fmt(r.Lold,1)}<br>`+
     `L<sub>${p.nNew}</sub> = (1 − α(1 − β))·C/${p.nNew} + γ·${p.nNew-1} + δm${p.k?` + κ·log₂(C/${p.nNew})`:""}`+
     ` = (1 − ${fmt(p.a)}·${fmt(1-p.b)})·${fmt(p.C/p.nNew,1)} + ${fmt(p.g*(p.nNew-1),1)} + ${fmt(p.dm,1)}${p.k?` + ${fmt(r.nw.ctx,1)}`:""} = ${fmt(r.Lnew,1)}<br>`+
-    `R = ${fmt(r.Lnew,1)} / ${fmt(r.Lold,1)} = ${fmt(R)}`;
+    `R = ${fmt(r.Lnew,1)} / ${fmt(r.Lold,1)} = ${fmt(R)}<br>`+
+    `S<sub>${p.nOld}</sub> = (${fmt(r.Lold,1)} / ${p.Lmax}) / ${fmt(p.cOld)} = ${fmt(Sold)}, &nbsp; `+
+    `S<sub>${p.nNew}</sub> = (${fmt(r.Lnew,1)} / ${p.Lmax}) / ${fmt(p.cNew)} = ${fmt(Snew)}, &nbsp; `+
+    `R<sub>S</sub> = ${fmt(RS)}`;
 }
 
 function drawChart(p,Lold){

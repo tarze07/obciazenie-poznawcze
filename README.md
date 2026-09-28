@@ -48,8 +48,24 @@ Przy pominięciu kosztów stałych i przejściu z 8 na 2 osoby warunek sprowadza
 
 Orientacyjnie: 0–3 jeden asystent, 4–10 kilka agentów z kontekstem, 10–20 orkiestracja wielu agentów, 20–30 intensywna praca „dyspozytorska”.
 
+## Czynnik stresu
+
+Stres liczony jest według modelu wymagania–kontrola (Job Demand-Control) Karaska (1979), najlepiej potwierdzonego empirycznie modelu stresu w pracy. Napięcie to iloraz wymagań i kontroli:
+
+```
+S = (L / L_max) / c
+```
+
+| Symbol | Znaczenie |
+|---|---|
+| L_max | pojemność poznawcza: obciążenie, przy którym wymagania są pełne (D = 1) |
+| c | kontrola (swoboda decyzji), 0,1–1, osobno dla zespołu pierwotnego i nowego modelu |
+
+Stosunek stresu: `R_S = S_nowy / S_stary = R · c_stary / c_nowy`. Próg S = 1 (wymagania równe kontroli) to umowna granica przyjęta w symulatorze; w badaniach wysokie napięcie wyznacza się zwykle względem mediany.
+
 ## Ograniczenia
 
 - δ·m jest stałą niezależną od C; w praktyce rośnie z wielkością projektu.
 - Model nie rozróżnia rodzajów obciążenia (wykonawcze vs decyzyjne), a praca decyzyjna męczy szybciej.
 - Parametry są szacunkami, nie pomiarami: wynik pokazuje zależności, nie dokładne wartości.
+- Stres rośnie liniowo z obciążeniem; model nie uwzględnia wsparcia społecznego ani zmęczenia narastającego w czasie.
