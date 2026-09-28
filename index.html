@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Obciążenie poznawcze: zespół vs 2 osoby + LLM</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Serif:wght@500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F4F6F9; --surface:#FFFFFF; --ink:#1B2330; --muted:#5E6B7E; --line:#D9DFE7;
+  --old:#3E5C9A; --new:#B9741A; --verif:#E0A94F; --koord:#7A8699; --agent:#8C6BB1; --ctx:#4E9A8C;
+  --good:#2E7D5B; --bad:#B23A3A;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#12161D; --surface:#1A2029; --ink:#E6EAF0; --muted:#98A3B3; --line:#2C3542;
+    --old:#7F9CDB; --new:#E3A248; --verif:#F0C57E; --koord:#8A95A8; --agent:#B39AD6; --ctx:#6FC0B1;
+    --good:#5CC196; --bad:#E07070;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#12161D; --surface:#1A2029; --ink:#E6EAF0; --muted:#98A3B3; --line:#2C3542;
+  --old:#7F9CDB; --new:#E3A248; --verif:#F0C57E; --koord:#8A95A8; --agent:#B39AD6; --ctx:#6FC0B1;
+  --good:#5CC196; --bad:#E07070;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.55 "IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:980px;margin:0 auto;padding:28px 18px 48px}
+h1{font:600 clamp(1.5rem,4vw,2.1rem)/1.2 "IBM Plex Serif",Georgia,serif;margin:0 0 6px}
+h2{font:600 1.15rem/1.3 "IBM Plex Serif",Georgia,serif;margin:0 0 12px}
+p.lead{color:var(--muted);margin:0 0 24px;max-width:68ch}
+.grid{display:grid;grid-template-columns:minmax(0,340px) minmax(0,1fr);gap:22px;align-items:start}
+@media (max-width:760px){.grid{grid-template-columns:1fr}}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:18px}
+.ctrl{margin-bottom:16px}
+.ctrl:last-child{margin-bottom:0}
+.ctrl label{display:flex;justify-content:space-between;gap:10px;font-weight:500;font-size:.95rem}
+.ctrl label output{font-variant-numeric:tabular-nums;color:var(--ink)}
+.ctrl small{display:block;color:var(--muted);font-size:.82rem;line-height:1.35;margin-top:2px}
+input[type=range]{width:100%;margin:8px 0 0;accent-color:var(--new)}
+input[type=range]:focus-visible{outline:2px solid var(--old);outline-offset:3px}
+fieldset{border:none;padding:0;margin:0 0 18px}
+fieldset:last-child{margin-bottom:0}
+legend{font:600 .95rem "IBM Plex Serif",Georgia,serif;color:var(--muted);margin-bottom:10px;padding:0}
+.verdict{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 14px;margin-bottom:18px}
+.verdict .r{font:600 2.4rem/1 "IBM Plex Serif",Georgia,serif;font-variant-numeric:tabular-nums}
+.verdict .txt{font-size:1rem;color:var(--muted);flex:1 1 220px}
+.bars{display:grid;gap:14px;margin-bottom:10px}
+.barrow .name{display:flex;justify-content:space-between;font-size:.92rem;margin-bottom:5px}
+.barrow .name b{font-weight:600}
+.track{display:flex;height:30px;border-radius:5px;overflow:hidden;background:var(--bg)}
+.seg{height:100%;transition:width .25s ease}
+@media (prefers-reduced-motion:reduce){.seg{transition:none}}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:.84rem;color:var(--muted);margin:10px 0 0}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:11px;height:11px;border-radius:2px;display:inline-block}
+.chartwrap{overflow-x:auto;margin-top:6px}
+svg text{fill:var(--muted);font:12px "IBM Plex Sans",system-ui,sans-serif}
+.formula{font-size:.92rem;line-height:1.7;overflow-x:auto;white-space:nowrap;background:var(--bg);border-radius:6px;padding:10px 12px}
+.stack{display:grid;gap:22px}
+.note{color:var(--muted);font-size:.88rem;margin:10px 0 0}
+table{border-collapse:collapse;width:100%;font-size:.9rem;font-variant-numeric:tabular-nums}
+td,th{padding:5px 6px;border-bottom:1px solid var(--line);text-align:right}
+td:first-child,th:first-child{text-align:left}
+th{font-weight:500;color:var(--muted)}
+.tablewrap{overflow-x:auto}
+</style>
+</head>
+<body>
+<main>
+  <h1>Obciążenie poznawcze: 8 osób czy 2 osoby z LLM-ami?</h1>
+  <p class="lead">Model porównuje obciążenie jednej osoby w zespole pierwotnym z obciążeniem jednej z dwóch osób pracujących z modelami językowymi. Przesuwaj parametry i obserwuj, gdzie leży próg opłacalności.</p>
+
+  <div class="grid">
+    <section class="panel" aria-label="Parametry modelu">
+      <fieldset>
+        <legend>Projekt i zespoły</legend>
+        <div class="ctrl"><label for="C">Złożoność projektu C <output id="oC"></output></label><input type="range" id="C" min="10" max="500" step="5" value="100"><small>Łączna liczba decyzji, zadań i informacji.</small></div>
+        <div class="ctrl"><label for="nOld">Osoby w wersji pierwotnej <output id="onOld"></output></label><input type="range" id="nOld" min="2" max="20" step="1" value="8"></div>
+        <div class="ctrl"><label for="nNew">Osoby w nowej wersji <output id="onNew"></output></label><input type="range" id="nNew" min="1" max="10" step="1" value="2"></div>
+      </fieldset>
+      <fieldset>
+        <legend>LLM-y</legend>
+        <div class="ctrl"><label for="a">α, część pracy przejęta przez LLM <output id="oa"></output></label><input type="range" id="a" min="0" max="1" step="0.01" value="0.7"></div>
+        <div class="ctrl"><label for="b">β, koszt weryfikacji <output id="ob"></output></label><input type="range" id="b" min="0" max="1" step="0.01" value="0.3"><small>0 = sprawdzenie nic nie kosztuje, 1 = tyle samo co zrobienie samemu.</small></div>
+        <div class="ctrl"><label for="dm">δ·m, zarządzanie agentami <output id="odm"></output></label><input type="range" id="dm" min="0" max="30" step="0.5" value="3"><small>Prompty, kontekst, poprawianie agentów.</small></div>
+      </fieldset>
+      <fieldset>
+        <legend>Koszty stałe</legend>
+        <div class="ctrl"><label for="g">γ, koordynacja z jedną osobą <output id="og"></output></label><input type="range" id="g" min="0" max="10" step="0.5" value="2"></div>
+        <div class="ctrl"><label for="k">κ, koszt szerokości kontekstu <output id="ok"></output></label><input type="range" id="k" min="0" max="10" step="0.5" value="0"><small>Człon κ·log₂(C/n). Ile kosztuje ogarnięcie większego wycinka projektu.</small></div>
+      </fieldset>
+    </section>
+
+    <div class="stack">
+      <section class="panel" aria-live="polite">
+        <div class="verdict"><span class="r" id="R"></span><span class="txt" id="verdictTxt"></span></div>
+        <div class="bars">
+          <div class="barrow"><div class="name"><b id="lblOld"></b><span id="valOld"></span></div><div class="track" id="barOld"></div></div>
+          <div class="barrow"><div class="name"><b id="lblNew"></b><span id="valNew"></span></div><div class="track" id="barNew"></div></div>
+        </div>
+        <div class="legend">
+          <span><i style="background:var(--old)"></i>Praca własna (zespół)</span>
+          <span><i style="background:var(--new)"></i>Praca własna (nowy model)</span>
+          <span><i style="background:var(--verif)"></i>Weryfikacja LLM</span>
+          <span><i style="background:var(--koord)"></i>Koordynacja z ludźmi</span>
+          <span><i style="background:var(--agent)"></i>Zarządzanie agentami</span>
+          <span><i style="background:var(--ctx)"></i>Szerokość kontekstu</span>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Stosunek R w funkcji α</h2>
+        <div class="chartwrap"><svg id="chart" viewBox="0 0 560 260" width="100%" role="img" aria-label="Wykres stosunku obciążeń R w zależności od alfa"></svg></div>
+        <p class="note" id="threshold"></p>
+      </section>
+
+      <section class="panel">
+        <h2>Rozbicie na składniki</h2>
+        <div class="tablewrap"><table id="tbl"></table></div>
+        <h2 style="margin-top:18px">Wzór z bieżącymi wartościami</h2>
+        <div class="formula" id="formula"></div>
+      </section>
+    </div>
+  </div>
+</main>
+<script>
+const $ = id => document.getElementById(id);
+const ids = ["C","nOld","nNew","a","b","dm","g","k"];
+const fmt = (x,d=2) => Number(x).toLocaleString("pl-PL",{minimumFractionDigits:d,maximumFractionDigits:d});
+const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+
+function ctx(k,C,n){ const s=C/n; return s>1 ? k*Math.log2(s) : 0; }
+
+function loads(p, aOverride){
+  const a = aOverride ?? p.a;
+  const old = { exec:p.C/p.nOld, verif:0, koord:p.g*(p.nOld-1), agent:0, ctx:ctx(p.k,p.C,p.nOld) };
+  const nw  = { exec:(1-a)*p.C/p.nNew, verif:a*p.b*p.C/p.nNew, koord:p.g*(p.nNew-1), agent:p.dm, ctx:ctx(p.k,p.C,p.nNew) };
+  const sum = o => o.exec+o.verif+o.koord+o.agent+o.ctx;
+  return { old, nw, Lold:sum(old), Lnew:sum(nw) };
+}
+
+function read(){
+  const p={}; ids.forEach(i=>p[i]=parseFloat($(i).value));
+  $("oC").textContent=p.C; $("onOld").textContent=p.nOld; $("onNew").textContent=p.nNew;
+  $("oa").textContent=fmt(p.a); $("ob").textContent=fmt(p.b); $("odm").textContent=fmt(p.dm,1);
+  $("og").textContent=fmt(p.g,1); $("ok").textContent=fmt(p.k,1);
+  return p;
+}
+
+function bar(el, o, max, execColor){
+  const parts=[["exec",execColor],["verif","--verif"],["koord","--koord"],["agent","--agent"],["ctx","--ctx"]];
+  el.innerHTML = parts.filter(([k])=>o[k]>0).map(([k,c])=>
+    `<div class="seg" style="width:${(o[k]/max*100).toFixed(2)}%;background:var(${c})" title="${k}: ${fmt(o[k],1)}"></div>`).join("");
+}
+
+function render(){
+  const p=read();
+  const r=loads(p); const R=r.Lnew/r.Lold;
+  const max=Math.max(r.Lold,r.Lnew);
+  $("lblOld").textContent=`1 osoba z ${p.nOld}`;
+  $("lblNew").textContent=`1 osoba z ${p.nNew} + LLM`;
+  $("valOld").textContent=`L = ${fmt(r.Lold,1)}`;
+  $("valNew").textContent=`L = ${fmt(r.Lnew,1)}`;
+  bar($("barOld"),r.old,max,"--old"); bar($("barNew"),r.nw,max,"--new");
+
+  $("R").textContent=`R = ${fmt(R)}`;
+  $("R").style.color = R>1.02 ? css("--bad") : (R<0.98 ? css("--good") : css("--ink"));
+  const pct=Math.abs(R-1)*100;
+  $("verdictTxt").textContent = R>1.02 ? `Każda z ${p.nNew} osób ma o ${fmt(pct,0)}% większe obciążenie niż osoba w zespole ${p.nOld}-osobowym.`
+    : R<0.98 ? `Każda z ${p.nNew} osób ma o ${fmt(pct,0)}% mniejsze obciążenie niż osoba w zespole ${p.nOld}-osobowym.`
+    : `Obciążenie jest praktycznie takie samo.`;
+
+  // threshold alpha
+  const fixed = p.g*(p.nNew-1)+p.dm+ctx(p.k,p.C,p.nNew);
+  const base = p.C/p.nNew;
+  const denom = base*(1-p.b);
+  let msg;
+  if(denom<=0){ msg="Przy β = 1 weryfikacja kosztuje tyle co praca, więc LLM-y nie zmniejszają obciążenia przy żadnym α."; }
+  else{
+    const aStar=(base+fixed-r.Lold)/denom;
+    if(aStar<=0) msg="Nowy model wygrywa już przy α = 0, czyli bez LLM-ów (np. dzięki mniejszej koordynacji).";
+    else if(aStar>1) msg=`Próg opłacalności: nieosiągalny. Nawet przy α = 1 obciążenie jest wyższe (R = ${fmt(loads(p,1).Lnew/r.Lold)}).`;
+    else msg=`Próg opłacalności: α* = ${fmt(aStar)}. LLM-y muszą przejąć co najmniej ${fmt(aStar*100,0)}% pracy, żeby obciążenie nie wzrosło.`;
+  }
+  $("threshold").textContent=msg;
+
+  drawChart(p,r.Lold);
+
+  const rows=[["Praca własna","exec"],["Weryfikacja LLM","verif"],["Koordynacja z ludźmi","koord"],["Zarządzanie agentami","agent"],["Szerokość kontekstu","ctx"]];
+  $("tbl").innerHTML=`<tr><th>Składnik</th><th>1 z ${p.nOld}</th><th>1 z ${p.nNew} + LLM</th><th>Różnica</th></tr>`+
+    rows.map(([n,k])=>`<tr><td>${n}</td><td>${fmt(r.old[k],1)}</td><td>${fmt(r.nw[k],1)}</td><td>${(r.nw[k]-r.old[k]>=0?"+":"")}${fmt(r.nw[k]-r.old[k],1)}</td></tr>`).join("")+
+    `<tr><th>Razem</th><th>${fmt(r.Lold,1)}</th><th>${fmt(r.Lnew,1)}</th><th>${(r.Lnew-r.Lold>=0?"+":"")}${fmt(r.Lnew-r.Lold,1)}</th></tr>`;
+
+  $("formula").innerHTML=
+    `L<sub>${p.nOld}</sub> = C/${p.nOld} + γ·${p.nOld-1}${p.k?` + κ·log₂(C/${p.nOld})`:""} = ${fmt(r.Lold,1)}<br>`+
+    `L<sub>${p.nNew}</sub> = (1 − α(1 − β))·C/${p.nNew} + γ·${p.nNew-1} + δm${p.k?` + κ·log₂(C/${p.nNew})`:""}`+
+    ` = (1 − ${fmt(p.a)}·${fmt(1-p.b)})·${fmt(p.C/p.nNew,1)} + ${fmt(p.g*(p.nNew-1),1)} + ${fmt(p.dm,1)}${p.k?` + ${fmt(r.nw.ctx,1)}`:""} = ${fmt(r.Lnew,1)}<br>`+
+    `R = ${fmt(r.Lnew,1)} / ${fmt(r.Lold,1)} = ${fmt(R)}`;
+}
+
+function drawChart(p,Lold){
+  const W=560,H=260,m={l:44,r:14,t:14,b:36};
+  const iw=W-m.l-m.r, ih=H-m.t-m.b;
+  const pts=[]; for(let i=0;i<=100;i++){const a=i/100; pts.push([a,loads(p,a).Lnew/Lold]);}
+  const ymax=Math.max(1.2,Math.ceil(Math.max(...pts.map(q=>q[1]))*5)/5);
+  const x=a=>m.l+a*iw, y=v=>m.t+ih-(v/ymax)*ih;
+  let s="";
+  // grid
+  const step= ymax>4?1: ymax>2?0.5:0.2;
+  for(let v=0;v<=ymax+1e-9;v+=step){s+=`<line x1="${m.l}" x2="${W-m.r}" y1="${y(v)}" y2="${y(v)}" stroke="${css("--line")}" stroke-width="1"/><text x="${m.l-8}" y="${y(v)+4}" text-anchor="end">${fmt(v,1)}</text>`;}
+  for(let a=0;a<=1.0001;a+=0.2){s+=`<text x="${x(a)}" y="${H-m.b+18}" text-anchor="middle">${fmt(a,1)}</text>`;}
+  s+=`<text x="${m.l+iw/2}" y="${H-4}" text-anchor="middle">α</text>`;
+  // break-even
+  s+=`<line x1="${m.l}" x2="${W-m.r}" y1="${y(1)}" y2="${y(1)}" stroke="${css("--ink")}" stroke-dasharray="5 4" stroke-width="1.2"/>`;
+  s+=`<text x="${W-m.r}" y="${y(1)-6}" text-anchor="end">R = 1, próg</text>`;
+  // curve
+  s+=`<polyline fill="none" stroke="${css("--new")}" stroke-width="2.5" points="${pts.map(q=>`${x(q[0]).toFixed(1)},${y(q[1]).toFixed(1)}`).join(" ")}"/>`;
+  // current point
+  const Rc=loads(p).Lnew/Lold;
+  s+=`<circle cx="${x(p.a)}" cy="${y(Rc)}" r="6" fill="${css("--surface")}" stroke="${css("--new")}" stroke-width="2.5"/>`;
+  $("chart").innerHTML=s;
+}
+
+ids.forEach(i=>$(i).addEventListener("input",render));
+window.matchMedia("(prefers-color-scheme: dark)").addEventListener?.("change",render);
+render();
+</script>
+</body>
+</html>
