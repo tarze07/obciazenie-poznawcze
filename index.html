@@ -66,7 +66,11 @@ svg text{fill:var(--muted);font:12px "IBM Plex Sans",system-ui,sans-serif}
 .stack{display:grid;grid-template-columns:minmax(0,1fr);gap:22px}
 .below{margin-top:22px}
 @media (min-width:761px){
-  .grid>.panel,.results{position:sticky;top:12px;max-height:calc(100vh - 24px);overflow-y:auto;overscroll-behavior:contain}
+  .grid>.panel,.results{position:sticky;top:12px;max-height:calc(100vh - 24px);overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:var(--muted) transparent}
+  .grid>.panel::-webkit-scrollbar,.results::-webkit-scrollbar{width:8px}
+  .grid>.panel::-webkit-scrollbar-track,.results::-webkit-scrollbar-track{background:transparent}
+  .grid>.panel::-webkit-scrollbar-thumb,.results::-webkit-scrollbar-thumb{background:var(--line);border-radius:4px}
+  .grid>.panel::-webkit-scrollbar-thumb:hover,.results::-webkit-scrollbar-thumb:hover{background:var(--muted)}
 }
 .summary{display:none}
 @media (max-width:760px){
