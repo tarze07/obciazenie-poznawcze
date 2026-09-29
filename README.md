@@ -1,6 +1,6 @@
 # Symulator obciążenia poznawczego: zespół vs mały zespół + LLM
 
-Interaktywny kalkulator porównujący obciążenie poznawcze **jednej osoby** w zespole pierwotnym (domyślnie 8 osób) z obciążeniem jednej osoby w nowym modelu (domyślnie 2 osoby pracujące z LLM-ami).
+Interaktywny kalkulator porównujący obciążenie poznawcze **jednej osoby** w zespole pierwotnym (domyślnie 8 osób, można wybrać od 1 do 20) z obciążeniem jednej osoby w nowym modelu (domyślnie 2 osoby pracujące z LLM-ami).
 
 ## Uruchomienie
 

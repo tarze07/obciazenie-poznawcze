@@ -122,7 +122,7 @@ th{font-weight:500;color:var(--muted)}
       <fieldset>
         <legend>Projekt i zespoły</legend>
         <div class="ctrl"><label for="C">Złożoność projektu C <output id="oC"></output></label><input type="range" id="C" min="10" max="500" step="5" value="100"><small>Łączna liczba decyzji, zadań i informacji.</small></div>
-        <div class="ctrl"><label for="nOld">Osoby w wersji pierwotnej <output id="onOld"></output></label><input type="range" id="nOld" min="2" max="20" step="1" value="8"></div>
+        <div class="ctrl"><label for="nOld">Osoby w wersji pierwotnej <output id="onOld"></output></label><input type="range" id="nOld" min="1" max="20" step="1" value="8"><small>1 = osoba pracująca sama, bez zespołu i bez LLM-ów.</small></div>
         <div class="ctrl"><label for="nNew">Osoby w nowej wersji <output id="onNew"></output></label><input type="range" id="nNew" min="1" max="10" step="1" value="2"></div>
       </fieldset>
       <fieldset>
@@ -316,6 +316,12 @@ const ids = ["C","nOld","nNew","a","b","dm","g","k","Lmax","c0","eta","lam","rho
 const fmt = (x,d=2) => Number(x).toLocaleString("pl-PL",{minimumFractionDigits:d,maximumFractionDigits:d});
 const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
 
+const oldLbl = n => n===1 ? "1 osoba sama" : `1 osoba z ${n}`;
+const oldIn  = n => n===1 ? "przy pracy w pojedynkę" : `w zespole ${n}-osobowym`;
+const oldWho = n => n===1 ? "osoba pracująca sama" : `osoba w zespole ${n}-osobowym`;
+const newLbl = n => n===1 ? "1 osoba sama + LLM" : `1 osoba z ${n} + LLM`;
+const newWho = n => n===1 ? "Osoba w nowym modelu ma" : `Każda z ${n} osób ma`;
+
 function ctx(k,C,n){ const s=C/n; return s>1 ? k*Math.log2(s) : 0; }
 
 function loads(p, aOverride){
@@ -345,8 +351,8 @@ function render(){
   const p=read();
   const r=loads(p); const R=r.Lnew/r.Lold;
   const max=Math.max(r.Lold,r.Lnew);
-  $("lblOld").textContent=`1 osoba z ${p.nOld}`;
-  $("lblNew").textContent=`1 osoba z ${p.nNew} + LLM`;
+  $("lblOld").textContent=oldLbl(p.nOld);
+  $("lblNew").textContent=newLbl(p.nNew);
   $("valOld").textContent=`L = ${fmt(r.Lold,1)}`;
   $("valNew").textContent=`L = ${fmt(r.Lnew,1)}`;
   bar($("barOld"),r.old,max,"--old"); bar($("barNew"),r.nw,max,"--new");
@@ -354,8 +360,8 @@ function render(){
   $("R").textContent=`R = ${fmt(R)}`;
   $("R").style.color = R>1.02 ? css("--bad") : (R<0.98 ? css("--good") : css("--ink"));
   const pct=Math.abs(R-1)*100;
-  $("verdictTxt").textContent = R>1.02 ? `Każda z ${p.nNew} osób ma o ${fmt(pct,0)}% większe obciążenie niż osoba w zespole ${p.nOld}-osobowym.`
-    : R<0.98 ? `Każda z ${p.nNew} osób ma o ${fmt(pct,0)}% mniejsze obciążenie niż osoba w zespole ${p.nOld}-osobowym.`
+  $("verdictTxt").textContent = R>1.02 ? `${newWho(p.nNew)} o ${fmt(pct,0)}% większe obciążenie niż ${oldWho(p.nOld)}.`
+    : R<0.98 ? `${newWho(p.nNew)} o ${fmt(pct,0)}% mniejsze obciążenie niż ${oldWho(p.nOld)}.`
     : `Obciążenie jest praktycznie takie samo.`;
 
   // threshold alpha
@@ -379,11 +385,11 @@ function render(){
   const respOld=p.rho/p.nOld, respNew=p.rho/p.nNew;
   const Dold=r.Lold/p.Lmax+respOld, Dnew=r.Lnew/p.Lmax+respNew;
   const Sold=Dold/cOld, Snew=Dnew/cNew, RS=Snew/Sold;
-  $("ctrlTxt").innerHTML=`Wymagania: D = ${fmt(Dold)} w zespole ${p.nOld}-osobowym (w tym odpowiedzialność ${fmt(respOld)}), D = ${fmt(Dnew)} w nowym modelu (w tym odpowiedzialność ${fmt(respNew)}).<br>`+
-    `Kontrola: c = ${fmt(cOld)} w zespole ${p.nOld}-osobowym, c = ${fmt(cNew)} w nowym modelu.`;
+  $("ctrlTxt").innerHTML=`Wymagania: D = ${fmt(Dold)} ${oldIn(p.nOld)} (w tym odpowiedzialność ${fmt(respOld)}), D = ${fmt(Dnew)} w nowym modelu (w tym odpowiedzialność ${fmt(respNew)}).<br>`+
+    `Kontrola: c = ${fmt(cOld)} ${oldIn(p.nOld)}, c = ${fmt(cNew)} w nowym modelu.`;
   const smax=Math.max(1.5,Sold,Snew)*1.05;
-  $("slblOld").textContent=`1 osoba z ${p.nOld}`;
-  $("slblNew").textContent=`1 osoba z ${p.nNew} + LLM`;
+  $("slblOld").textContent=oldLbl(p.nOld);
+  $("slblNew").textContent=newLbl(p.nNew);
   [["Old",Sold],["New",Snew]].forEach(([k,S])=>{
     $("sval"+k).textContent=`S = ${fmt(S)}${S>1?" · wysokie napięcie":""}`;
     $("sbar"+k).style.width=`${(S/smax*100).toFixed(2)}%`;
@@ -401,7 +407,7 @@ function render(){
     : `Stres jest praktycznie taki sam.`;
 
   const rows=[["Praca własna","exec"],["Weryfikacja LLM","verif"],["Koordynacja z ludźmi","koord"],["Zarządzanie agentami","agent"],["Szerokość kontekstu","ctx"]];
-  $("tbl").innerHTML=`<tr><th>Składnik</th><th>1 z ${p.nOld}</th><th>1 z ${p.nNew} + LLM</th><th>Różnica</th></tr>`+
+  $("tbl").innerHTML=`<tr><th>Składnik</th><th>${p.nOld===1?"1 sama":`1 z ${p.nOld}`}</th><th>${p.nNew===1?"1 sama + LLM":`1 z ${p.nNew} + LLM`}</th><th>Różnica</th></tr>`+
     rows.map(([n,k])=>`<tr><td>${n}</td><td>${fmt(r.old[k],1)}</td><td>${fmt(r.nw[k],1)}</td><td>${(r.nw[k]-r.old[k]>=0?"+":"")}${fmt(r.nw[k]-r.old[k],1)}</td></tr>`).join("")+
     `<tr><th>Razem</th><th>${fmt(r.Lold,1)}</th><th>${fmt(r.Lnew,1)}</th><th>${(r.Lnew-r.Lold>=0?"+":"")}${fmt(r.Lnew-r.Lold,1)}</th></tr>`;
 
